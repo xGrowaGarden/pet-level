@@ -1,0 +1,112 @@
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Metro UI
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local Screen = Instance.new("ScreenGui", PlayerGui)
+local Frame = Instance.new("Frame", Screen)
+Frame.Size = UDim2.new(0, 300, 0, 400)
+Frame.Position = UDim2.new(0.5, -150, 0.3, -200)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+-- Helper to create buttons
+local function createButton(text, yIndex, callback)
+    local btn = Instance.new("TextButton", Frame)
+    btn.Size = UDim2.new(1, -20, 0, 40)
+    btn.Position = UDim2.new(0, 10, 0, 10 + (yIndex - 1) * 45)
+    btn.Text = text
+    btn.TextScaled = true
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.MouseButton1Click:Connect(callback)
+end
+
+-- Features
+
+-- 1. Set Pet Age
+createButton("Set Pet Age", 1, function()
+    local pets = workspace:FindFirstChild("PetsFolder")
+    if pets then
+        for _, pet in ipairs(pets:GetChildren()) do
+            if pet:FindFirstChild("Age") then
+                pet.Age.Value = 999
+            end
+        end
+    end
+end)
+
+-- 2. Mutation ESP (simple glow for mutated items)
+createButton("Mutation Finder", 2, function()
+    for _, plant in ipairs(workspace:GetDescendants()) do
+        if plant:FindFirstChild("IsMutated") and plant.IsMutated.Value == true then
+            local highlight = Instance.new("Highlight")
+            highlight.Parent = plant
+            highlight.FillColor = Color3.fromRGB(0, 255, 0)
+        end
+    end
+end)
+
+-- 3. Pet ESP (show pet owner names)
+createButton("Pet ESP", 3, function()
+    for _, pet in ipairs(workspace:GetDescendants()) do
+        if pet.Name == "PetModel" and pet.PrimaryPart then
+            local billboard = Instance.new("BillboardGui", pet.PrimaryPart)
+            billboard.Size = UDim2.new(0, 100, 0, 40)
+            local label = Instance.new("TextLabel", billboard)
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.Text = "Owned by: " .. (pet:GetAttribute("Owner") or "Unknown")
+            label.TextScaled = true
+            label.BackgroundTransparency = 1
+        end
+    end
+end)
+
+-- 4. Tool Dupe – clone a tool in Backpack
+createButton("Tool Dupe", 4, function()
+    local tool = Player.Backpack:FindFirstChild("FavoriteTool")
+    if tool then
+        tool:Clone().Parent = Player.Backpack
+    end
+end)
+
+-- 5. Auto‑Buy Egg / Seed / Gear
+createButton("Buy Egg/Seed/Gear", 5, function()
+    local shop = workspace:FindFirstChild("ShopItems")
+    if shop then
+        for _, item in ipairs({"Egg", "Seed", "Gear"}) do
+            local target = shop:FindFirstChild(item)
+            if target then
+                local buyEvent = target:FindFirstChild("BuyRemote")
+                if buyEvent then
+                    buyEvent:FireServer()
+                end
+            end
+        end
+    end
+end)
+
+-- 6. Seed Spawner
+createButton("Seed Spawner", 6, function()
+    local seeds = ReplicatedStorage:FindFirstChild("AllSeeds")
+    if seeds then
+        for _, seed in ipairs(seeds:GetChildren()) do
+            local clone = seed:Clone()
+            clone.Parent = Player.Backpack
+        end
+    end
+end)
+
+-- 7. Pet Spawner
+createButton("Pet Spawner", 7, function()
+    local pets = ReplicatedStorage:FindFirstChild("AllPets")
+    if pets then
+        local chosen = pets:FindFirstChild("RarePet")
+        if chosen then
+            local newPet = chosen:Clone()
+            newPet.Parent = workspace:WaitForChild("PetsFolder")
+            newPet:SetAttribute("Owner", Player.Name)
+        end
+    end
+end)
